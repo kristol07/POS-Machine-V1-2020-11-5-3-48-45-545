@@ -77,24 +77,25 @@ function getUnitPostfix(item: ShopItem): string {
 
 function renderShopItem(item: ShopItem, bestRule: PromotionRule): string {
   const unit = item.unit + getUnitPostfix(item)
-  return `Name：${item.name}，Quantity：${item.quantity} ${unit}，Unit：${item.unitPrice.toFixed(2)}(yuan)，Subtotal：${calculateSubtotal(item, bestRule).toFixed(2)}(yuan)\n`
+  const subtotal = calculateSubtotal(item, bestRule)
+  return `Name：${item.name}，Quantity：${item.quantity} ${unit}，Unit：${item.unitPrice.toFixed(2)}(yuan)，Subtotal：${subtotal.toFixed(2)}(yuan)\n`
 }
 
 function renderReceipt(shopItems: ShopItem[], bestRule: PromotionRule): string {
-  const header = '***<store earning no money>Receipt ***\n'
-  const horizontalLine = '----------------------\n'
-  const end = '**********************'
-
   let receipt = ''
-  receipt += header
-  shopItems.forEach(item => {
-    receipt += renderShopItem(item, bestRule)
-  })
+  receipt += '***<store earning no money>Receipt ***\n'
 
-  receipt += horizontalLine
-  receipt += `Total：${calculateTotal(shopItems, bestRule).toFixed(2)}(yuan)\n`
-  receipt += `Discounted prices：${(calculateTotalWithoutPromo(shopItems) - calculateTotal(shopItems, bestRule)).toFixed(2)}(yuan)\n`
-  receipt += end
+  receipt += shopItems.map(item => renderShopItem(item, bestRule)).join('')
+
+  receipt += '----------------------\n'
+
+  const total = calculateTotal(shopItems, bestRule)
+  receipt += `Total：${total.toFixed(2)}(yuan)\n`
+
+  const discount = calculateTotalWithoutPromo(shopItems) - calculateTotal(shopItems, bestRule)
+  receipt += `Discounted prices：${discount.toFixed(2)}(yuan)\n`
+
+  receipt += '**********************'
 
   return receipt
 }
