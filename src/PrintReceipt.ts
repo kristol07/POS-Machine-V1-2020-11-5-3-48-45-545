@@ -1,7 +1,11 @@
 import { loadAllItems, loadPromotions } from './Dependencies'
 
 class ShopItem {
-  constructor(public barcode: string, public quantity: number, public unitPrice: number) {
+  constructor(public barcode: string,
+    public quantity: number,
+    public unitPrice: number,
+    public name: string,
+    public unit: string) {
   }
 }
 
@@ -20,10 +24,10 @@ function getItems(tags: string[]): ShopItem[] {
       barcode = tag.split('-')[0]
       quantity = Number(tag.split('-')[1])
     }
-    const unitPrice = allItems.find(item => item.barcode === barcode)?.price
+    const item = allItems.find(item => item.barcode === barcode)
     const index = shopItems.findIndex(item => item.barcode === barcode)
     index === -1
-      ? shopItems.push(new ShopItem(barcode, quantity, unitPrice || 0))
+      ? shopItems.push(new ShopItem(barcode, quantity, item?.price || 0, item?.name || '', item?.unit || ''))
       : shopItems[index].quantity += quantity
   })
   return shopItems
@@ -71,10 +75,12 @@ function getUnitPostfix(item: ShopItem): string {
   return item.quantity > 1 ? 's' : ''
 }
 
-function renderReceipt(shopItems: ShopItem[], bestRule: PromotionRule): string
-{
-  const allItems = loadAllItems()
+function renderShopItem(item: ShopItem, bestRule: PromotionRule): string {
+  const unit = item.unit + getUnitPostfix(item)
+  return `Name：${item.name}，Quantity：${item.quantity} ${unit}，Unit：${item.unitPrice.toFixed(2)}(yuan)，Subtotal：${calculateSubtotal(item, bestRule).toFixed(2)}(yuan)\n`
+}
 
+function renderReceipt(shopItems: ShopItem[], bestRule: PromotionRule): string {
   const header = '***<store earning no money>Receipt ***\n'
   const horizontalLine = '----------------------\n'
   const end = '**********************'
@@ -82,9 +88,7 @@ function renderReceipt(shopItems: ShopItem[], bestRule: PromotionRule): string
   let receipt = ''
   receipt += header
   shopItems.forEach(item => {
-    const name = allItems.find(i => i.barcode === item.barcode)?.name || ''
-    const unit = allItems.find(i => i.barcode === item.barcode)?.unit + getUnitPostfix(item) || ''
-    receipt += `Name：${name}，Quantity：${item.quantity} ${unit}，Unit：${item.unitPrice.toFixed(2)}(yuan)，Subtotal：${calculateSubtotal(item, bestRule).toFixed(2)}(yuan)\n`
+    receipt += renderShopItem(item, bestRule)
   })
 
   receipt += horizontalLine
